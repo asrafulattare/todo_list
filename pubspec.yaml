@@ -36,7 +36,6 @@ dependencies:
   hive: any
   hive_flutter: any
   fluttertoast: any
-  flutter_slidable: any
 
 dev_dependencies:
   flutter_test:

@@ -37,21 +37,26 @@ class _HomeScreenState extends State<HomeScreen> {
                 height: 10,
               ),
               Expanded(
-                child: ValueListenableBuilder(
-                  valueListenable: Hive.box('todoList').listenable(),
-                  builder: (_, box, widget) {
-                    return ListView.builder(
-                      scrollDirection: Axis.vertical,
-                      shrinkWrap: true,
-                      itemCount: todoBox!.keys.toList().length,
-                      itemBuilder: (_, index) {
-                        return Card(
-                          elevation: 4,
-                          child: ListTile(
-                            title: Text(
-                              todoBox!.getAt(index).toString(),
-                            ),
-                            trailing: SizedBox(
+                child: Padding(
+                  padding: EdgeInsets.only(
+                    bottom: MediaQuery.of(context).size.height / 12,
+                  ),
+                  child: ValueListenableBuilder(
+                    valueListenable: Hive.box('todoList').listenable(),
+                    builder: (_, box, widget) {
+                      return ListView.builder(
+                        reverse: false,
+                        scrollDirection: Axis.vertical,
+                        shrinkWrap: true,
+                        itemCount: todoBox!.keys.toList().length,
+                        itemBuilder: (_, index) {
+                          return Card(
+                            elevation: 4,
+                            child: ListTile(
+                              title: Text(
+                                todoBox!.getAt(index).toString(),
+                              ),
+                              trailing: SizedBox(
                                 width: 100,
                                 child: Row(
                                   children: [
@@ -72,6 +77,22 @@ class _HomeScreenState extends State<HomeScreen> {
                                                           .spaceBetween,
                                                   children: [
                                                     TextField(
+                                                      textInputAction:
+                                                          TextInputAction.done,
+                                                      onEditingComplete:
+                                                          () async {
+                                                        final navigator =
+                                                            Navigator.of(
+                                                                context);
+                                                        final input =
+                                                            _updatingController
+                                                                .text;
+                                                        await todoBox!.putAt(
+                                                            index, input);
+                                                        navigator.pop();
+                                                        _updatingController
+                                                            .clear();
+                                                      },
                                                       controller:
                                                           _updatingController
                                                             ..text = todoBox!
@@ -131,62 +152,60 @@ class _HomeScreenState extends State<HomeScreen> {
                                       ),
                                     ),
                                   ],
-                                )),
-                          ),
-                        );
-                      },
-                    );
-                  },
+                                ),
+                              ),
+                            ),
+                          );
+                        },
+                      );
+                    },
+                  ),
                 ),
               ),
             ],
           ),
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        elevation: 6,
-        onPressed: () async {
-          return showDialog(
-            context: context,
-            builder: (context) {
-              return AlertDialog(
-                content: SizedBox(
-                  height: MediaQuery.of(context).size.height / 6,
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      TextField(
-                        controller: _editingController,
-                        decoration: const InputDecoration(
-                          label: Text('Write Your Todo'),
-                          labelStyle: TextStyle(
-                            color: Colors.grey,
-                            fontSize: 16,
-                            fontFamily: "verdana_regular",
-                            fontWeight: FontWeight.w400,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(
-                        height: 16,
-                      ),
-                      ElevatedButton(
-                          onPressed: () async {
-                            final navigator = Navigator.of(context);
-                            final input = _editingController.text;
-                            await todoBox!.add(input);
-                            navigator.pop();
-                            _editingController.clear();
-                          },
-                          child: const Text('Submit'))
-                    ],
+      bottomSheet: Container(
+        color: Colors.white,
+        height: MediaQuery.of(context).size.height / 10,
+        child: Row(
+          children: [
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.all(10.0),
+                child: TextField(
+                  textInputAction: TextInputAction.done,
+                  onEditingComplete: () async {
+                    final input = _editingController.text;
+                    await todoBox!.add(input);
+
+                    _editingController.clear();
+                  },
+                  controller: _editingController,
+                  decoration: const InputDecoration(
+                    label: Text('Write Your Todo'),
+                    labelStyle: TextStyle(
+                      color: Colors.grey,
+                      fontSize: 16,
+                      fontFamily: "verdana_regular",
+                      fontWeight: FontWeight.w400,
+                    ),
                   ),
                 ),
-              );
-            },
-          );
-        },
-        child: const Icon(Icons.add),
+              ),
+            ),
+            IconButton(
+              onPressed: () async {
+                final input = _editingController.text;
+                await todoBox!.add(input);
+
+                _editingController.clear();
+              },
+              icon: const Icon(Icons.send),
+            ),
+          ],
+        ),
       ),
     );
   }
